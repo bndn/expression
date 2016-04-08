@@ -1,19 +1,10 @@
 {
-    "version": "0.0.0",
-    "description": "",
-    "authors": [
-    ],
-    "tags": [
-    ],
-    "projectUrl": "https://github.itu.dk/bndn/expression",
-    "licenseUrl": "https://github.itu.dk/bndn/expression/blob/master/LICENSE.md",
-
     "dependencies": {
         "FSharp.Dnx": {
             "type": "build",
             "version": "1.0.0-*"
         },
-        "Expression": "1.0.0",
+        "Expression": "0.0.0",
         "Xunit": "2.1.0-*",
         "Xunit.Runner.Dnx": "2.1.0-*",
         "FsUnit.xUnit": "1.4.1"
@@ -24,7 +15,7 @@
     },
 
     "frameworks": {
-        "dnx451": {}
+        "dnx451": { }
     },
 
     "compiler": {
@@ -34,6 +25,7 @@
     },
     "fsharp": {
         "files": [
+            "ExpressionTest.fs"
         ]
     }
 }

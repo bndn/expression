@@ -1,7 +1,9 @@
 {
     "version": "0.0.0",
-    "description": "",
+    "description": "A library for parsing mathmatical expressions to abstract syntax trees",
     "authors": [
+        "Mathias Grundtvig Andreasen <mgru@itu.dk>",
+        "Kasper Kronborg Isager <kasi@itu.dk>"
     ],
     "tags": [
     ],
@@ -30,7 +32,8 @@
     },
     "fsharp": {
         "files": [
-            "Program.fs"
+            "Expression.fsi",
+            "Expression.fs"
         ]
     }
 }
