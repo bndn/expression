@@ -112,6 +112,15 @@ let ``usage expression in exponents`` () =
     Expression.parse "2^(2+5)"          |> should equal (FExponent (FNum 2.0, FAdd (FNum 2.0, FNum 5.0)))
 
 [<Fact>]
+let ``usage of root and expression in root`` () =
+    Expression.parse "2_3"              |> should equal (FRoot (FNum 2.0,FNum 3.0))
+    Expression.parse "2.0_3.0"          |> should equal (FRoot (FNum 2.0,FNum 3.0))
+    Expression.parse "5*2_3"            |> should equal (FMult (FNum 5.0,FRoot (FNum 2.0,FNum 3.0)))
+    Expression.parse "2_(3+6)"          |> should equal (FRoot (FNum 2.0,FAdd (FNum 3.0,FNum 6.0)))
+    Expression.parse "(2/5)_(3*6)"      |> should equal (FRoot (FDiv (FNum 2.0,FNum 5.0),FMult (FNum 3.0,FNum 6.0)))
+    Expression.parse "y_x"              |> should equal (FRoot (FVar "y",FVar "x"))
+
+[<Fact>]
 let ``invalid expressions`` () =
     // Multiple operators in succession (except for operator followed by -).
     (fun () -> Expression.parse "2++3" |> ignore)  |> shouldFail

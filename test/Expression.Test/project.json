@@ -4,7 +4,7 @@
             "type": "build",
             "version": "1.0.0-*"
         },
-        "Expression": "0.0.0",
+        "Expression": "",
         "Xunit": "2.1.0-*",
         "Xunit.Runner.Dnx": "2.1.0-*",
         "FsUnit.xUnit": "1.4.1"

@@ -2,10 +2,10 @@
 module Expression
 
 type Terminal =
-    Add | Mul | Pwr | Sub | Div | Lpar | Rpar | Int of int | Float of float | Var of string
+    Add | Mul | Pwr | Root | Sub | Div | Lpar | Rpar | Int of int | Float of float | Var of string
 
 type Expr =
-    FNum of float | FVar of string | FAdd of Expr * Expr | FMult of Expr * Expr | FSub of Expr * Expr | FDiv of Expr * Expr | FExponent of Expr * Expr
+    FNum of float | FVar of string | FAdd of Expr * Expr | FMult of Expr * Expr | FSub of Expr * Expr | FDiv of Expr * Expr | FExponent of Expr * Expr | FRoot of Expr * Expr
 
 /// <summary>
 /// Raised in case of an exception during scanning.
@@ -99,6 +99,7 @@ let scan s =
         | '*' :: cr -> Mul  :: sc cr
         | '/' :: cr -> Div  :: sc cr
         | '^' :: cr -> Pwr  :: sc cr
+        | '_' :: cr -> Root :: sc cr
         | '(' :: cr -> Lpar :: sc cr
         | ')' :: cr -> Rpar :: sc cr
         | '-' :: cr -> Sub  :: sc cr
@@ -123,7 +124,8 @@ let insertNegativeNum (ts : Terminal list) =
     match ts with
     | Sub :: Int x :: tss -> inn (Int (-1 * x) :: tss)
     | Sub :: Float x :: tss -> inn (Float (-1.0 * x) :: tss)
-    | _ :: tss -> inn ts
+    | [] -> []
+    | _  -> inn ts
 
 /// <summary>
 /// Insert implicit negation of expressions and variables in a terminal list.
@@ -137,7 +139,8 @@ let insertNegation (ts : Terminal list) =
         | [] -> []
     match ts with
     | Sub :: ((Var _ | Lpar) as t) :: tss -> ine (Float -1.0 :: t :: tss)
-    | _ :: tss -> ine ts
+    | [] -> []
+    | _  -> ine ts
 
 /// <summary>
 /// Insert explicit multiplications in a terminal list.
@@ -192,7 +195,8 @@ and F ts = (P >> Fopt) ts
 /// </remarks>
 and Fopt (ts, inval) =
     match ts with
-    | Pwr :: tr -> let (tf, tv) = F tr in Fopt (tf, FExponent (inval, tv))
+    | Pwr  :: tr -> let (tf, tv) = F tr in Fopt (tf, FExponent (inval, tv))
+    | Root :: tr -> let (tf, tv) = F tr in Fopt (tf, FRoot (inval, tv))
     | _ -> (ts, inval)
 
 /// <remarks>
