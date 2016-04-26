@@ -5,7 +5,7 @@ type Terminal =
     Add | Mul | Pwr | Root | Sub | Div | Lpar | Rpar | Int of int | Float of float | Var of string
 
 type Expr =
-    FNum of float | FVar of string | FAdd of Expr * Expr | FMult of Expr * Expr | FSub of Expr * Expr | FDiv of Expr * Expr | FExponent of Expr * Expr | FRoot of Expr * Expr
+    FNum of float | FVar of string | FAdd of Expr * Expr | FMult of Expr * Expr | FSub of Expr * Expr | FDiv of Expr * Expr | FExponent of Expr * int | FRoot of Expr * int
 
 /// <summary>
 /// Raised in case of an exception during scanning.
@@ -195,8 +195,8 @@ and F ts = (P >> Fopt) ts
 /// </remarks>
 and Fopt (ts, inval) =
     match ts with
-    | Pwr  :: tr -> let (tf, tv) = F tr in Fopt (tf, FExponent (inval, tv))
-    | Root :: tr -> let (tf, tv) = F tr in Fopt (tf, FRoot (inval, tv))
+    | Pwr  :: Int i :: tr -> (tr, FExponent(inval, i))
+    | Root :: Int i :: tr -> (tr, FRoot(inval, i))
     | _ -> (ts, inval)
 
 /// <remarks>

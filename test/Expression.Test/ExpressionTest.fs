@@ -41,19 +41,19 @@ let ``division and multiplication should be calculated before addition and subtr
 
 [<Fact>]
 let ``exponent should be calculated before multiplication, division, addition and substraction`` () =
-    Expression.parse "5+9^2+2"          |> should equal (FAdd (FAdd (FNum 5.0,FExponent (FNum 9.0,FNum 2.0)),FNum 2.0))
-    Expression.parse "5*9^2*2"          |> should equal (FMult (FMult (FNum 5.0,FExponent (FNum 9.0,FNum 2.0)),FNum 2.0))
-    Expression.parse "5-9^2-2"          |> should equal (FSub (FSub (FNum 5.0,FExponent (FNum 9.0,FNum 2.0)),FNum 2.0))
-    Expression.parse "5/9^2/2"          |> should equal (FDiv (FDiv (FNum 5.0,FExponent (FNum 9.0,FNum 2.0)),FNum 2.0))
+    Expression.parse "5+9^2+2"          |> should equal (FAdd (FAdd (FNum 5.0,FExponent (FNum 9.0,2)),FNum 2.0))
+    Expression.parse "5*9^2*2"          |> should equal (FMult (FMult (FNum 5.0,FExponent (FNum 9.0,2)),FNum 2.0))
+    Expression.parse "5-9^2-2"          |> should equal (FSub (FSub (FNum 5.0,FExponent (FNum 9.0,2)),FNum 2.0))
+    Expression.parse "5/9^2/2"          |> should equal (FDiv (FDiv (FNum 5.0,FExponent (FNum 9.0,2)),FNum 2.0))
 
 let ``expressions in parentheses should be evaluated before any other expression`` () =
-    Expression.parse "5/9^(2/2)"        |> should equal (FDiv (FNum 5.0,FExponent (FNum 9.0,FDiv (FNum 2.0,FNum 2.0))))
+    Expression.parse "9^2(2/2)"         |> should equal ((FExponent (FNum 9.0,2),FDiv (FNum 2.0,FNum 2.0)))
     Expression.parse "5-9*(2/2)"        |> should equal (FSub (FNum 5.0,FMult (FNum 9.0,FDiv (FNum 2.0,FNum 2.0))))
 
 [<Fact>]
 let ``usage of negative numbers in combination with addtion and multiplication`` () =
     Expression.parse "2+-3*-4"          |> should equal (FAdd (FNum 2.0,FMult (FNum -3.0,FNum -4.0)))
-    Expression.parse "2+-3^-4"          |> should equal (FAdd (FNum 2.0,FExponent (FNum -3.0,FNum -4.0)))
+    Expression.parse "2+-3^-4"          |> should equal (FAdd (FNum 2.0,FExponent (FNum -3.0,-4)))
 
 [<Fact>]
 let ``usage of floats`` () =
@@ -65,13 +65,12 @@ let ``usage of floats`` () =
 let ``implicit inserting of multiplication for parentheses`` () =
     Expression.parse "-1(2+3)"          |> should equal (FMult (FNum -1.0,FAdd (FNum 2.0,FNum 3.0)))
     Expression.parse "(2+3)4"           |> should equal (FMult (FAdd (FNum 2.0,FNum 3.0),FNum 4.0))
-    Expression.parse "2^(2+3)4"         |> should equal (FMult (FExponent (FNum 2.0,FAdd (FNum 2.0,FNum 3.0)),FNum 4.0))
 
 [<Fact>]
 let ``usage of exponent`` () =
-    Expression.parse "2^4"              |> should equal (FExponent (FNum 2.0,FNum 4.0))
-    Expression.parse "x^2"              |> should equal (FExponent (FVar "x",FNum 2.0))
-    Expression.parse "x^2.0"            |> should equal (FExponent (FVar "x",FNum 2.0))
+    Expression.parse "2^4"              |> should equal (FExponent (FNum 2.0,4))
+    Expression.parse "x^2"              |> should equal (FExponent (FVar "x",2))
+    Expression.parse "x^-2"             |> should equal (FExponent (FVar "x",-2))
 
 [<Fact>]
 let ``variable before number, should be read as a name`` () =
@@ -94,8 +93,8 @@ let ``ignore whitespace`` () =
 let ``longer and more complex expressions`` () =
     Expression.parse "2x(3x)"           |> should equal (FMult (FMult (FNum 2.0,FVar "x"),FMult (FNum 3.0,FVar "x")))
     Expression.parse "2 x 2 y(2 x(-2))" |> should equal (FMult (FMult (FMult (FMult (FNum 2.0,FVar "x"),FNum 2.0),FVar "y"), FMult (FMult (FNum 2.0,FVar "x"),FNum -2.0)))
-    Expression.parse "2x^2*2y^2"        |> should equal (FMult (FMult (FMult (FNum 2.0,FExponent (FVar "x",FNum 2.0)),FNum 2.0), FExponent (FVar "y",FNum 2.0)))
-    Expression.parse "2x^2(2y^2)"       |> should equal (FMult (FMult (FNum 2.0,FExponent (FVar "x",FNum 2.0)), FMult (FNum 2.0,FExponent (FVar "y",FNum 2.0))))
+    Expression.parse "2x^2*2y^2"        |> should equal (FMult (FMult (FMult (FNum 2.0,FExponent (FVar "x",2)),FNum 2.0), FExponent (FVar "y",2)))
+    Expression.parse "2x^2(2y^2)"       |> should equal (FMult (FMult (FNum 2.0,FExponent (FVar "x",2)), FMult (FNum 2.0,FExponent (FVar "y",2))))
 
 [<Fact>]
 let ``implicit negation of variables and parentheses`` () =
@@ -104,33 +103,34 @@ let ``implicit negation of variables and parentheses`` () =
     Expression.parse "- (2+3)"          |> should equal (FMult (FNum -1.0,FAdd (FNum 2.0,FNum 3.0)))
 
 [<Fact>]
-let ``usage multiple exponents`` () =
-    Expression.parse "2^3^4"            |> should equal (FExponent (FNum 2.0,FExponent (FNum 3.0, FNum 4.0)))
-
-[<Fact>]
-let ``usage expression in exponents`` () =
-    Expression.parse "2^(2+5)"          |> should equal (FExponent (FNum 2.0, FAdd (FNum 2.0, FNum 5.0)))
-
-[<Fact>]
-let ``usage of root and expression in root`` () =
-    Expression.parse "2_3"              |> should equal (FRoot (FNum 2.0,FNum 3.0))
-    Expression.parse "2.0_3.0"          |> should equal (FRoot (FNum 2.0,FNum 3.0))
-    Expression.parse "5*2_3"            |> should equal (FMult (FNum 5.0,FRoot (FNum 2.0,FNum 3.0)))
-    Expression.parse "2_(3+6)"          |> should equal (FRoot (FNum 2.0,FAdd (FNum 3.0,FNum 6.0)))
-    Expression.parse "(2/5)_(3*6)"      |> should equal (FRoot (FDiv (FNum 2.0,FNum 5.0),FMult (FNum 3.0,FNum 6.0)))
-    Expression.parse "y_x"              |> should equal (FRoot (FVar "y",FVar "x"))
+let ``usage of root`` () =
+    Expression.parse "2_3"              |> should equal (FRoot (FNum 2.0,3))
+    Expression.parse "5*2_3"            |> should equal (FMult (FNum 5.0,FRoot (FNum 2.0,3)))
 
 [<Fact>]
 let ``invalid expressions`` () =
     // Multiple operators in succession (except for operator followed by -).
-    (fun () -> Expression.parse "2++3" |> ignore)  |> shouldFail
-    (fun () -> Expression.parse "2*/3" |> ignore)  |> shouldFail
-    (fun () -> Expression.parse "2-+3" |> ignore)  |> shouldFail
-    (fun () -> Expression.parse "2*/3" |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2++3"      |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2*/3"      |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2-+3"      |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2*/3"      |> ignore)  |> shouldFail
     // Odd number of left and right parentheses.
-    (fun () -> Expression.parse "2*(2" |> ignore)  |> shouldFail
-    (fun () -> Expression.parse "2+2)" |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2*(2"      |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2+2)"      |> ignore)  |> shouldFail
     // Usage of comma instead of dot.
-    (fun () -> Expression.parse "2,0"  |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2,0"       |> ignore)  |> shouldFail
     // Empty expression.
-    (fun () -> Expression.parse "()"   |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "()"        |> ignore)  |> shouldFail
+    // Float exponent / root
+    (fun () -> Expression.parse "2^2.0"     |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2_2.0"     |> ignore)  |> shouldFail
+    // Multiple exponent / root
+    (fun () -> Expression.parse "2^3^4"     |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2^3_4"     |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2_3_4"     |> ignore)  |> shouldFail
+    // Expression in exponent / root
+    (fun () -> Expression.parse "2^x"       |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2_x"       |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2_(2+3)"   |> ignore)  |> shouldFail
+    (fun () -> Expression.parse "2^(2+3)"   |> ignore)  |> shouldFail
+
